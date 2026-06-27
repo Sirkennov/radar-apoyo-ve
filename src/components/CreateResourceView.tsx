@@ -91,6 +91,9 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
       if (voluntariado.nombre_voluntario.trim().length < 3) {
         voluntariadoErrors.nombre_voluntario = 'El nombre debe tener al menos 3 caracteres';
       }
+      if (voluntariado.nombre_voluntario.trim().length > 60) {
+        voluntariadoErrors.nombre_voluntario = 'El nombre no puede superar los 60 caracteres';
+      }
       if (!isValidPhone(voluntariado.contacto)) {
         voluntariadoErrors.contacto = 'Ingresa un teléfono válido (10 a 13 dígitos)';
       }
@@ -441,6 +444,7 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                     <input
                       type="text"
                       required
+                      maxLength={60}
                       placeholder="Ej: Carlos Mendoza"
                       value={voluntariado.nombre_voluntario}
                       onChange={(e) => {

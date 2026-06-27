@@ -132,7 +132,7 @@ export function VoluntariosView({ ofertas }: VoluntariosViewProps) {
               <div className="flex flex-col flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <User size={16} className="text-gray-600" />
-                  <span className="font-medium text-gray-800">{oferta.nombre_voluntario}</span>
+                  <span className="font-medium text-gray-800 break-all">{oferta.nombre_voluntario}</span>
                   <span className="px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700">
                     {oferta.categoria}
                   </span>
