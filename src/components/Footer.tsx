@@ -1,10 +1,11 @@
 import { Share2, AlertTriangle, Mail, Globe, Heart, ExternalLink } from 'lucide-react';
 
 export function Footer() {
+  const siteUrl = 'https://radar-apoyo-ve.vercel.app/';
   const shareText = encodeURIComponent(
-    'RadarApoyoVE - Plataforma para conectar necesidades y voluntarios en Venezuela. Ayuda o pide ayuda: '
+    'RadarApoyoVE 🇻🇪 es una plataforma ciudadana para conectar necesidades urgentes con voluntarios y recursos en Venezuela. Si necesitas ayuda o puedes ofrecerla, entra aquí: '
   );
-  const shareUrl = encodeURIComponent(window.location.href);
+  const shareUrl = encodeURIComponent(siteUrl);
 
   const handleShare = () => {
     const url = `https://wa.me/?text=${shareText}${shareUrl}`;
