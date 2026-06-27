@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { supabase } from './lib/supabase';
 import { TabNavigation } from './components/TabNavigation';
 import { NecesidadesView } from './components/NecesidadesView';
 import { VoluntariosView } from './components/VoluntariosView';
@@ -16,21 +17,60 @@ function App() {
   const [currentView, setCurrentView] = useState<'main' | 'create' | 'confirm'>('main');
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const { data: necesidades, loading: loadingNecesidades, error: errorNecesidades } = useCache<Necesidad[]>(
-    'necesidades',
-    supabaseService.getNecesidades
-  );
+  const {
+    data: necesidades,
+    loading: loadingNecesidades,
+    error: errorNecesidades,
+    refetch: refetchNecesidades
+  } = useCache<Necesidad[]>('necesidades', supabaseService.getNecesidades);
 
-  const { data: ofertas, loading: loadingOfertas, error: errorOfertas } = useCache<OfertaVoluntario[]>(
-    'ofertas',
-    supabaseService.getOfertasVoluntarios
-  );
+  const {
+    data: ofertas,
+    loading: loadingOfertas,
+    error: errorOfertas,
+    refetch: refetchOfertas
+  } = useCache<OfertaVoluntario[]>('ofertas', supabaseService.getOfertasVoluntarios);
 
-  const { data: stats } = useCache(
+  const { data: stats, refetch: refetchStats } = useCache(
     'stats',
     supabaseService.getStats,
-    300000 // 5 minutos de caché para stats
+    0 // Sin caché: los stats siempre se recalculan desde Supabase
   );
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('radarapoyove-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'necesidades' },
+        () => {
+          refetchNecesidades();
+          refetchStats();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'ofertas_voluntarios' },
+        () => {
+          refetchOfertas();
+          refetchStats();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'puntos_asistencia' },
+        () => {
+          refetchNecesidades();
+          refetchOfertas();
+          refetchStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [refetchNecesidades, refetchOfertas, refetchStats]);
 
   const handleMarkResolved = (necesidad: Necesidad) => {
     setSelectedNecesidad(necesidad);
