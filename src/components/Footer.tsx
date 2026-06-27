@@ -3,7 +3,7 @@ import { Share2, AlertTriangle, Mail, Globe, Heart, ExternalLink } from 'lucide-
 export function Footer() {
   const siteUrl = 'https://radar-apoyo-ve.vercel.app/';
   const shareText = encodeURIComponent(
-    'RadarApoyoVE 🇻🇪 es una plataforma ciudadana para conectar necesidades urgentes con voluntarios y recursos en Venezuela. Si necesitas ayuda o puedes ofrecerla, entra aquí: '
+    'RadarApoyoVE 🇻🇪 no es solo otra lista de puntos de acopio: es una red ciudadana para conectar necesidades específicas con voluntarios y recursos en lugares concretos de Venezuela. Si necesitas ayuda, publica tu necesidad exacta y dónde. Si puedes ofrecerla, publica tu disponibilidad y lo que tienes. Todo es punto a punto, persona a persona. Entra aquí: '
   );
   const shareUrl = encodeURIComponent(siteUrl);
 
