@@ -51,8 +51,7 @@ export function Footer() {
             <div className="flex items-start gap-2 text-xs text-yellow-700 bg-yellow-50 p-3 rounded-lg">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               <p>
-                Usa esta información con criterio. Si encuentras datos incorrectos o sospechosos,
-                evita contactar y reporta cuando sea posible.
+                La información es aportada por la comunidad y no ha sido verificada; verifica siempre antes de difundirla. Usa esta información con criterio. Si encuentras datos incorrectos o sospechosos, evita contactar y reporta cuando sea posible.
               </p>
             </div>
           </div>

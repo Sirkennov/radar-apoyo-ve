@@ -1,6 +1,27 @@
 import { useState } from 'react';
 import { ArrowLeft, Shield } from 'lucide-react';
 
+function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length === 0) return '';
+
+  const hasPlus = value.trim().startsWith('+');
+  if (hasPlus || digits.length > 10) {
+    const country = digits.slice(0, 2);
+    const rest = digits.slice(2);
+    if (rest.length <= 3) return `+${country} ${rest}`;
+    if (rest.length <= 7) return `+${country} ${rest.slice(0, 3)}-${rest.slice(3)}`;
+    return `+${country} ${rest.slice(0, 3)}-${rest.slice(3, 7)}-${rest.slice(7, 11)}`;
+  }
+
+  if (digits.length <= 4) return digits;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 11)}`;
+}
+
+function normalizePhone(value: string): string {
+  return value.replace(/\D/g, '');
+}
+
 interface ConfirmViewProps {
   expectedContact: string;
   puntoName: string;
@@ -15,8 +36,8 @@ export function ConfirmView({ expectedContact, puntoName, onConfirm, onCancel }:
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const normalizedInput = inputContact.replace(/\D/g, '');
-    const normalizedExpected = expectedContact.replace(/\D/g, '');
+    const normalizedInput = normalizePhone(inputContact);
+    const normalizedExpected = normalizePhone(expectedContact);
 
     if (normalizedExpected.length > 3 && normalizedInput !== normalizedExpected) {
       setError('El número de contacto no coincide con el registrado para este punto.');
@@ -65,9 +86,10 @@ export function ConfirmView({ expectedContact, puntoName, onConfirm, onCancel }:
               </label>
               <input
                 id="contacto"
-                type="text"
+                type="tel"
+                inputMode="tel"
                 value={inputContact}
-                onChange={(e) => setInputContact(e.target.value)}
+                onChange={(e) => setInputContact(formatPhone(e.target.value))}
                 placeholder="Ej: 0412-1234567"
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
               />

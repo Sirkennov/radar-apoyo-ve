@@ -239,6 +239,10 @@ export function NecesidadesView({ necesidades, onMarkResolved }: NecesidadesView
               <p className="text-gray-700 font-medium">{selectedNecesidad.punto?.contacto}</p>
             </div>
 
+            <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3 text-sm text-yellow-800">
+              <strong>¿Ya fue atendida?</strong> Cuando esta necesidad se resuelva, usa el botón "Marcar como resuelto" para mantener la información actualizada.
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-gray-100">
               <button
                 onClick={() => handleContact(selectedNecesidad.punto?.contacto || '')}
