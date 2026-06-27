@@ -76,7 +76,7 @@ export function ConfirmView({ expectedContact, puntoName, onConfirm, onCancel }:
 
           <p className="text-gray-700 mb-6">
             Estás marcando como <strong>resuelta</strong> una necesidad del punto{' '}
-            <strong>{puntoName}</strong>. Para evitar borrados malintencionados, confirma el número de contacto del punto.
+            <strong className="break-all">{puntoName}</strong>. Para evitar borrados malintencionados, confirma el número de contacto del punto.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
