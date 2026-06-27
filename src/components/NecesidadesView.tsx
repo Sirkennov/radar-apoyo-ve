@@ -130,7 +130,7 @@ export function NecesidadesView({ necesidades, onMarkResolved }: NecesidadesView
               onClick={() => setSelectedNecesidad(nec)}
               className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col cursor-pointer hover:border-gray-300 transition-colors"
             >
-              <div className="flex-1 min-w-0">
+              <div className="flex flex-col flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100">
                     {nec.categoria}
@@ -152,7 +152,7 @@ export function NecesidadesView({ necesidades, onMarkResolved }: NecesidadesView
                   )}
                 </div>
                 <p className="text-gray-800 mb-2 line-clamp-3">{nec.descripcion}</p>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-gray-600 mt-auto">
                   <MapPin size={14} />
                   <span className="truncate">{nec.punto?.nombre_punto}</span>
                   <span>•</span>

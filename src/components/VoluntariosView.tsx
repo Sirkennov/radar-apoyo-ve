@@ -129,7 +129,7 @@ export function VoluntariosView({ ofertas }: VoluntariosViewProps) {
               onClick={() => setSelectedOferta(oferta)}
               className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col cursor-pointer hover:border-gray-300 transition-colors"
             >
-              <div className="flex-1 min-w-0">
+              <div className="flex flex-col flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <User size={16} className="text-gray-600" />
                   <span className="font-medium text-gray-800">{oferta.nombre_voluntario}</span>
@@ -141,13 +141,15 @@ export function VoluntariosView({ ofertas }: VoluntariosViewProps) {
                   </span>
                 </div>
                 <p className="text-gray-800 mb-2 line-clamp-3">{oferta.recurso_ofrecido}</p>
-                <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                  <MapPin size={14} />
-                  <span className="truncate">{oferta.sector_actual}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Clock size={14} />
-                  <span>Disponible por: {timeLeft[oferta.id] || 'Calculando...'}</span>
+                <div className="flex flex-col gap-1 text-sm text-gray-600 mt-auto">
+                  <div className="flex items-center gap-2">
+                    <MapPin size={14} />
+                    <span className="truncate">{oferta.sector_actual}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock size={14} />
+                    <span>Disponible por: {timeLeft[oferta.id] || 'Calculando...'}</span>
+                  </div>
                 </div>
               </div>
               <div className="pt-3 mt-auto border-t border-gray-100">
