@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const DEFAULT_CACHE_DURATION = 60000; // 60 segundos en milisegundos
 
@@ -12,7 +12,7 @@ export function useCache<T>(key: string, fetcher: () => Promise<T>, duration = D
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchData = async (force = false) => {
+  const fetchData = useCallback(async (force = false) => {
     try {
       setLoading(true);
 
@@ -48,11 +48,11 @@ export function useCache<T>(key: string, fetcher: () => Promise<T>, duration = D
     } finally {
       setLoading(false);
     }
-  };
+  }, [key, fetcher, duration]);
 
   useEffect(() => {
     fetchData();
-  }, [key, fetcher]);
+  }, [key, fetcher, fetchData]);
 
   return { data, loading, error, refetch: () => fetchData(true) };
 }
