@@ -2,17 +2,18 @@ import { useState, useEffect } from 'react';
 import { MessageCircle, MapPin, AlertCircle, CheckCircle } from 'lucide-react';
 import type { Necesidad } from '../types';
 import { SECTORES, CATEGORIAS, DESTINATARIOS } from '../types';
-import { Modal } from './Modal';
+import { NecesidadDetailModal } from './NecesidadDetailModal';
 import { Paginator } from './Paginator';
 
 interface NecesidadesViewProps {
   necesidades: Necesidad[];
   onMarkResolved: (necesidad: Necesidad) => void;
+  onVerEnMapa?: (necesidad: Necesidad) => void;
 }
 
 const ITEMS_PER_PAGE = 10;
 
-export function NecesidadesView({ necesidades, onMarkResolved }: NecesidadesViewProps) {
+export function NecesidadesView({ necesidades, onMarkResolved, onVerEnMapa }: NecesidadesViewProps) {
   const [sectorFilter, setSectorFilter] = useState('Todos');
   const [categoriaFilter, setCategoriaFilter] = useState('Todas');
   const [dirigidoAFilter, setDirigidoAFilter] = useState('Todos');
@@ -79,7 +80,7 @@ export function NecesidadesView({ necesidades, onMarkResolved }: NecesidadesView
           </select>
         </div>
         <div>
-          <label className="block text-[10px] sm:text-xs font-medium text-gray-500 mb-1 truncate">Dirigido a</label>
+          <label className="block text-[10px] sm:text-xs font-medium text-gray-500 mb-1 truncate">Soy un(a)</label>
           <select
             value={dirigidoAFilter}
             onChange={(e) => setDirigidoAFilter(e.target.value)}
@@ -87,7 +88,11 @@ export function NecesidadesView({ necesidades, onMarkResolved }: NecesidadesView
           >
             {DESTINATARIOS.map((dest) => (
               <option key={dest} value={dest}>
-                {dest}
+                {dest === 'Personas'
+                  ? 'Persona'
+                  : dest === 'Centros de Acopio'
+                  ? 'Centro de Acopio'
+                  : dest}
               </option>
             ))}
           </select>
@@ -154,10 +159,22 @@ export function NecesidadesView({ necesidades, onMarkResolved }: NecesidadesView
                 <p className="text-gray-800 mb-2 line-clamp-3">{nec.descripcion}</p>
                 <div className="flex items-center gap-2 text-sm text-gray-600 mt-auto">
                   <MapPin size={14} />
-                  <span className="truncate">{nec.punto?.nombre_punto}</span>
-                  <span>•</span>
                   <span className="truncate">{nec.punto?.sector}</span>
                 </div>
+                {(nec.nombre_persona || nec.punto?.nombre_punto) && (
+                  <div className="text-sm text-gray-600 mt-1">
+                    {nec.dirigido_a === 'Personas'
+                      ? nec.nombre_persona
+                      : nec.dirigido_a === 'Centros de Acopio'
+                      ? nec.punto?.nombre_punto
+                      : [
+                          ...(nec.nombre_persona ? [nec.nombre_persona] : []),
+                          ...(nec.punto?.nombre_punto && nec.punto.nombre_punto !== nec.nombre_persona
+                            ? [nec.punto.nombre_punto]
+                            : []),
+                        ].join(' · ')}
+                  </div>
+                )}
               </div>
               <div className="flex flex-col sm:flex-row gap-2 pt-3 mt-auto border-t border-gray-100">
                 <button
@@ -195,76 +212,16 @@ export function NecesidadesView({ necesidades, onMarkResolved }: NecesidadesView
         </div>
       )}
 
-      <Modal
-        isOpen={!!selectedNecesidad}
+      <NecesidadDetailModal
+        necesidad={selectedNecesidad}
         onClose={() => setSelectedNecesidad(null)}
-        title="Detalle de la necesidad"
-      >
-        {selectedNecesidad && (
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100">
-                {selectedNecesidad.categoria}
-              </span>
-              <span className="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-700">
-                {selectedNecesidad.dirigido_a}
-              </span>
-              {selectedNecesidad.urgencia === 'Crítica' && (
-                <span className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-700">
-                  <AlertCircle size={12} />
-                  Crítica
-                </span>
-              )}
-            </div>
-
-            <div>
-              <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Descripción</h4>
-              <p className="text-gray-800 leading-relaxed">{selectedNecesidad.descripcion}</p>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Punto de asistencia</h4>
-              <div className="flex items-start gap-2 text-gray-700">
-                <MapPin size={16} className="mt-0.5 shrink-0" />
-                <div>
-                  <p className="font-medium">{selectedNecesidad.punto?.nombre_punto}</p>
-                  <p className="text-sm">{selectedNecesidad.punto?.sector}</p>
-                  <p className="text-sm text-gray-600">{selectedNecesidad.punto?.direccion_exacta}</p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Contacto</h4>
-              <p className="text-gray-700 font-medium">{selectedNecesidad.punto?.contacto}</p>
-            </div>
-
-            <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3 text-sm text-yellow-800">
-              <strong>¿Ya fue atendida?</strong> Cuando esta necesidad se resuelva, usa el botón "Marcar como resuelto" para mantener la información actualizada.
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-gray-100">
-              <button
-                onClick={() => handleContact(selectedNecesidad.punto?.contacto || '')}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-              >
-                <MessageCircle size={18} />
-                Contactar por WhatsApp
-              </button>
-              <button
-                onClick={() => {
-                  onMarkResolved(selectedNecesidad);
-                  setSelectedNecesidad(null);
-                }}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                <CheckCircle size={18} />
-                Marcar como resuelto
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
+        onMarkResolved={onMarkResolved}
+        onVerEnMapa={() => {
+          if (selectedNecesidad && onVerEnMapa) {
+            onVerEnMapa(selectedNecesidad);
+          }
+        }}
+      />
     </div>
   );
 }

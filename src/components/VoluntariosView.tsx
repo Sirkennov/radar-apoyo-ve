@@ -2,16 +2,17 @@ import { useState, useEffect } from 'react';
 import { MessageCircle, MapPin, Clock, User } from 'lucide-react';
 import type { OfertaVoluntario } from '../types';
 import { SECTORES, CATEGORIAS, DESTINATARIOS } from '../types';
-import { Modal } from './Modal';
+import { VoluntarioDetailModal } from './VoluntarioDetailModal';
 import { Paginator } from './Paginator';
 
 interface VoluntariosViewProps {
   ofertas: OfertaVoluntario[];
+  onVerEnMapa?: (oferta: OfertaVoluntario) => void;
 }
 
 const ITEMS_PER_PAGE = 10;
 
-export function VoluntariosView({ ofertas }: VoluntariosViewProps) {
+export function VoluntariosView({ ofertas, onVerEnMapa }: VoluntariosViewProps) {
   const [sectorFilter, setSectorFilter] = useState('Todos');
   const [categoriaFilter, setCategoriaFilter] = useState('Todas');
   const [dirigidoAFilter, setDirigidoAFilter] = useState('Todos');
@@ -131,14 +132,16 @@ export function VoluntariosView({ ofertas }: VoluntariosViewProps) {
             >
               <div className="flex flex-col flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <User size={16} className="text-gray-600" />
-                  <span className="font-medium text-gray-800 break-all">{oferta.nombre_voluntario}</span>
                   <span className="px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700">
                     {oferta.categoria}
                   </span>
                   <span className="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-700">
                     {oferta.dirigido_a}
                   </span>
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <User size={16} className="text-gray-600" />
+                  <span className="font-medium text-gray-800 break-all">{oferta.nombre_voluntario}</span>
                 </div>
                 <p className="text-gray-800 mb-2 line-clamp-3">{oferta.recurso_ofrecido}</p>
                 <div className="flex flex-col gap-1 text-sm text-gray-600 mt-auto">
@@ -161,7 +164,7 @@ export function VoluntariosView({ ofertas }: VoluntariosViewProps) {
                   className="w-full flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
                 >
                   <MessageCircle size={16} />
-                  Contactar
+                  WhatsApp
                 </button>
               </div>
             </div>
@@ -176,72 +179,16 @@ export function VoluntariosView({ ofertas }: VoluntariosViewProps) {
         </div>
       )}
 
-      <Modal
-        isOpen={!!selectedOferta}
+      <VoluntarioDetailModal
+        oferta={selectedOferta}
         onClose={() => setSelectedOferta(null)}
-        title="Detalle del voluntario"
-      >
-        {selectedOferta && (
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <span className="px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-700">
-                {selectedOferta.categoria}
-              </span>
-              <span className="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-700">
-                {selectedOferta.dirigido_a}
-              </span>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Voluntario</h4>
-              <div className="flex items-center gap-2 text-gray-800">
-                <User size={16} />
-                <span className="font-medium text-lg">{selectedOferta.nombre_voluntario}</span>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Recurso ofrecido</h4>
-              <p className="text-gray-800 leading-relaxed">{selectedOferta.recurso_ofrecido}</p>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Ubicación</h4>
-              <div className="flex items-start gap-2 text-gray-700">
-                <MapPin size={16} className="mt-0.5 shrink-0" />
-                <span>{selectedOferta.sector_actual}</span>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Disponibilidad</h4>
-              <div className="flex items-center gap-2 text-gray-700">
-                <Clock size={16} />
-                <span>
-                  {timeLeft[selectedOferta.id] === 'Expirado'
-                    ? 'Esta oferta ya expiró'
-                    : `Disponible por: ${timeLeft[selectedOferta.id] || 'Calculando...'}`}
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Contacto</h4>
-              <p className="text-gray-700 font-medium">{selectedOferta.contacto}</p>
-            </div>
-
-            <div className="pt-2 border-t border-gray-100">
-              <button
-                onClick={() => handleContact(selectedOferta.contacto)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-              >
-                <MessageCircle size={18} />
-                Contactar por WhatsApp
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
+        timeLeft={selectedOferta ? timeLeft[selectedOferta.id] : undefined}
+        onVerEnMapa={() => {
+          if (selectedOferta && onVerEnMapa) {
+            onVerEnMapa(selectedOferta);
+          }
+        }}
+      />
     </div>
   );
 }

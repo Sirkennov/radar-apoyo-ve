@@ -3,6 +3,7 @@ import { supabase } from './lib/supabase';
 import { TabNavigation } from './components/TabNavigation';
 import { NecesidadesView } from './components/NecesidadesView';
 import { VoluntariosView } from './components/VoluntariosView';
+import { MapView } from './components/MapView';
 import { ConfirmView } from './components/ConfirmView';
 import { CreateResourceView } from './components/CreateResourceView';
 import { HeroSection } from './components/HeroSection';
@@ -12,10 +13,17 @@ import { supabaseService } from './services/supabaseService';
 import type { Necesidad, OfertaVoluntario } from './types';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'necesidades' | 'voluntarios'>('necesidades');
+  const [activeTab, setActiveTab] = useState<'necesidades' | 'voluntarios' | 'mapa'>('necesidades');
   const [selectedNecesidad, setSelectedNecesidad] = useState<Necesidad | null>(null);
   const [currentView, setCurrentView] = useState<'main' | 'create' | 'confirm'>('main');
+  const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (activeTab !== 'mapa') {
+      setMapFocus(null);
+    }
+  }, [activeTab]);
 
   const {
     data: necesidades,
@@ -111,6 +119,20 @@ function App() {
     }
   };
 
+  const handleVerNecesidadEnMapa = (necesidad: Necesidad) => {
+    if (necesidad.punto?.lat != null && necesidad.punto?.lng != null) {
+      setMapFocus({ lat: necesidad.punto.lat, lng: necesidad.punto.lng });
+      setActiveTab('mapa');
+    }
+  };
+
+  const handleVerVoluntarioEnMapa = (oferta: OfertaVoluntario) => {
+    if (oferta.lat != null && oferta.lng != null) {
+      setMapFocus({ lat: oferta.lat, lng: oferta.lng });
+      setActiveTab('mapa');
+    }
+  };
+
   if (currentView === 'create') {
     return (
       <CreateResourceView
@@ -136,7 +158,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-[72px]">
-      <header className="fixed top-0 left-0 right-0 z-50 bg-indigo-900 text-white shadow-lg">
+      <header className="fixed top-0 left-0 right-0 z-1001 bg-indigo-900 text-white shadow-lg">
         <div className="max-w-[1200px] mx-auto px-4 h-[72px] flex items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -167,7 +189,7 @@ function App() {
       <main ref={contentRef} className="max-w-[1200px] mx-auto px-4 py-6">
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {activeTab === 'necesidades' ? (
+        {activeTab === 'necesidades' && (
           <>
             {loadingNecesidades && (
               <div className="text-center py-8 text-gray-500">Cargando necesidades...</div>
@@ -178,10 +200,15 @@ function App() {
               </div>
             )}
             {!loadingNecesidades && !errorNecesidades && necesidades && (
-              <NecesidadesView necesidades={necesidades} onMarkResolved={handleMarkResolved} />
+              <NecesidadesView
+                necesidades={necesidades}
+                onMarkResolved={handleMarkResolved}
+                onVerEnMapa={handleVerNecesidadEnMapa}
+              />
             )}
           </>
-        ) : (
+        )}
+        {activeTab === 'voluntarios' && (
           <>
             {loadingOfertas && (
               <div className="text-center py-8 text-gray-500">Cargando voluntarios...</div>
@@ -192,9 +219,12 @@ function App() {
               </div>
             )}
             {!loadingOfertas && !errorOfertas && ofertas && (
-              <VoluntariosView ofertas={ofertas} />
+              <VoluntariosView ofertas={ofertas} onVerEnMapa={handleVerVoluntarioEnMapa} />
             )}
           </>
+        )}
+        {activeTab === 'mapa' && necesidades && ofertas && (
+          <MapView necesidades={necesidades} ofertas={ofertas} focus={mapFocus} />
         )}
       </main>
 
