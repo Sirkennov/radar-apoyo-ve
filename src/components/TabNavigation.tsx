@@ -1,6 +1,6 @@
-import { Heart, Users } from 'lucide-react';
+import { Heart, Users, MapPin } from 'lucide-react';
 
-type TabType = 'necesidades' | 'voluntarios';
+type TabType = 'necesidades' | 'voluntarios' | 'mapa';
 
 interface TabNavigationProps {
   activeTab: TabType;
@@ -31,6 +31,17 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
       >
         <Users size={20} />
         Voluntarios
+      </button>
+      <button
+        onClick={() => onTabChange('mapa')}
+        className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all ${
+          activeTab === 'mapa'
+            ? 'bg-indigo-600 text-white shadow-lg'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        }`}
+      >
+        <MapPin size={20} />
+        Mapa
       </button>
     </div>
   );

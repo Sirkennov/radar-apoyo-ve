@@ -1,4 +1,4 @@
-import { ArrowDown, Heart, MapPin, Users, CheckCircle, User } from 'lucide-react';
+import { ArrowDown, Heart, MapPin, CheckCircle, User, AlertCircle } from 'lucide-react';
 
 interface HeroSectionProps {
   stats: {
@@ -33,7 +33,7 @@ export function HeroSection({ stats, onPublish, onViewList }: HeroSectionProps) 
     {
       label: 'Personas que necesitan ayuda',
       value: safeStats.personas_que_necesitan_ayuda,
-      icon: User,
+      icon: Heart,
       color: 'text-red-600',
       valueColor: 'text-red-600',
       bg: 'bg-red-50',
@@ -41,15 +41,15 @@ export function HeroSection({ stats, onPublish, onViewList }: HeroSectionProps) 
     {
       label: 'Voluntarios activos',
       value: safeStats.voluntarios_activos,
-      icon: Users,
-      color: 'text-purple-600',
-      valueColor: 'text-purple-600',
-      bg: 'bg-purple-50',
+      icon: User,
+      color: 'text-green-600',
+      valueColor: 'text-green-600',
+      bg: 'bg-green-50',
     },
     {
       label: 'Necesidades activas',
       value: safeStats.necesidades_activas,
-      icon: Heart,
+      icon: AlertCircle,
       color: 'text-orange-600',
       valueColor: 'text-orange-600',
       bg: 'bg-orange-50',
