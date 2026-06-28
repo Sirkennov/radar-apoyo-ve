@@ -1,15 +1,19 @@
 export interface PuntoAsistencia {
   id: string;
-  nombre_punto: string;
+  nombre_punto?: string | null;
+  tipo_punto?: 'Centro de Acopio' | 'Persona' | null;
   sector: string;
   direccion_exacta: string;
   contacto: string;
+  lat?: number | null;
+  lng?: number | null;
   creado_el: string;
 }
 
 export interface Necesidad {
   id: string;
   punto_id: string;
+  nombre_persona?: string | null;
   categoria: string;
   descripcion: string;
   urgencia: 'Crítica' | 'Moderada';
@@ -24,10 +28,13 @@ export interface OfertaVoluntario {
   nombre_voluntario: string;
   contacto: string;
   sector_actual: string;
+  direccion_exacta?: string | null;
   categoria: string;
   recurso_ofrecido: string;
   activo_hasta: string;
   dirigido_a: 'Personas' | 'Centros de Acopio' | 'Ambos';
+  lat?: number | null;
+  lng?: number | null;
   creado_el: string;
 }
 

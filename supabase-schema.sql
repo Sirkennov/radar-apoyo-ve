@@ -8,10 +8,13 @@ DROP TABLE IF EXISTS puntos_asistencia CASCADE;
 -- 1. PUNTOS DE ASISTENCIA / ACOPIO / REFUGIOS
 CREATE TABLE puntos_asistencia (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    nombre_punto VARCHAR(150) NOT NULL,
+    nombre_punto VARCHAR(150), -- Opcional: solo rellenar si es centro de acopio
+    tipo_punto VARCHAR(30) DEFAULT 'Centro de Acopio', -- 'Centro de Acopio' o 'Persona'
     sector VARCHAR(100) NOT NULL, -- Ej: 'Catia', 'Chacao', 'Maiquetía', 'Los Corales'
     direccion_exacta TEXT NOT NULL,
     contacto VARCHAR(50) NOT NULL, -- Número telefónico o alias directo
+    lat DECIMAL(10, 8),
+    lng DECIMAL(11, 8),
     creado_el TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -19,6 +22,7 @@ CREATE TABLE puntos_asistencia (
 CREATE TABLE necesidades (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     punto_id UUID REFERENCES puntos_asistencia(id) ON DELETE CASCADE,
+    nombre_persona VARCHAR(100), -- Rellenar si la necesidad es de una persona
     categoria VARCHAR(50) NOT NULL, -- 'Cocina/Alimentos', 'Medicinas', 'Transporte', 'Mano de Obra', 'Herramientas'
     descripcion TEXT NOT NULL,
     urgencia VARCHAR(20) DEFAULT 'Moderada', -- 'Crítica' o 'Moderada'
@@ -33,10 +37,13 @@ CREATE TABLE ofertas_voluntarios (
     nombre_voluntario VARCHAR(100) NOT NULL,
     contacto VARCHAR(50) NOT NULL,
     sector_actual VARCHAR(100) NOT NULL,
+    direccion_exacta TEXT,
     categoria VARCHAR(50) NOT NULL DEFAULT 'Otros', -- 'Cocina/Alimentos', 'Medicinas/Salud', 'Transporte/Logística', etc.
     recurso_ofrecido TEXT NOT NULL, -- Ej: "Tengo moto y puedo trasladar insumos médicos"
     activo_hasta TIMESTAMP WITH TIME ZONE NOT NULL, -- Control estricto de vigencia horaria
     dirigido_a VARCHAR(30) DEFAULT 'Ambos', -- 'Personas', 'Centros de Acopio', 'Ambos'
+    lat DECIMAL(10, 8),
+    lng DECIMAL(11, 8),
     creado_el TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -74,3 +81,4 @@ CREATE POLICY "Permitir inserción pública" ON ofertas_voluntarios FOR INSERT W
 
 -- 8. Permitir que CUALQUIERA pueda ACTUALIZAR necesidades (marcar como resuelto)
 CREATE POLICY "Permitir actualización pública" ON necesidades FOR UPDATE USING (true);
+

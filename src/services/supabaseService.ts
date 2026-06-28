@@ -8,6 +8,7 @@ export const supabaseService = {
       .select(`
         id,
         punto_id,
+        nombre_persona,
         categoria,
         descripcion,
         urgencia,
@@ -17,9 +18,12 @@ export const supabaseService = {
         punto:puntos_asistencia(
           id,
           nombre_punto,
+          tipo_punto,
           sector,
           direccion_exacta,
           contacto,
+          lat,
+          lng,
           creado_el
         )
       `)
@@ -37,7 +41,7 @@ export const supabaseService = {
   async getOfertasVoluntarios(): Promise<OfertaVoluntario[]> {
     const { data, error } = await supabase
       .from('ofertas_voluntarios')
-      .select('id, nombre_voluntario, contacto, sector_actual, categoria, recurso_ofrecido, activo_hasta, dirigido_a, creado_el')
+      .select('id, nombre_voluntario, contacto, sector_actual, direccion_exacta, categoria, recurso_ofrecido, activo_hasta, dirigido_a, lat, lng, creado_el')
       .gte('activo_hasta', new Date().toISOString())
       .order('creado_el', { ascending: false });
 
@@ -103,7 +107,10 @@ export const supabaseService = {
       { count: necesidades_resueltas, error: errorNecesidadesResueltas },
       { count: voluntarios_activos, error: errorVoluntarios },
     ] = await Promise.all([
-      supabase.from('puntos_asistencia').select('*', { count: 'exact', head: true }),
+      supabase
+        .from('puntos_asistencia')
+        .select('*', { count: 'exact', head: true })
+        .eq('tipo_punto', 'Centro de Acopio'),
       supabase
         .from('necesidades')
         .select('*', { count: 'exact', head: true })
