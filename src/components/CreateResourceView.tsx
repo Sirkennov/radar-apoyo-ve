@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, Heart, User, Minus, Plus } from 'lucide-react';
 import { supabaseService } from '../services/supabaseService';
+import { LocationPicker } from './LocationPicker';
 import { SECTORES, CATEGORIAS, DESTINATARIOS } from '../types';
 
 type ResourceType = 'necesidad' | 'voluntariado';
@@ -67,8 +68,10 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
 
     if (resourceType === 'necesidad') {
       const puntoErrors: Record<string, string> = {};
-      if (punto.nombre_punto.trim().length < 3) {
-        puntoErrors.nombre_punto = 'El nombre del punto debe tener al menos 3 caracteres';
+      const esCentro = necesidad.dirigido_a === 'Centros de Acopio' || necesidad.dirigido_a === 'Ambos';
+      const esPersona = necesidad.dirigido_a === 'Personas' || necesidad.dirigido_a === 'Ambos';
+      if (esCentro && punto.nombre_punto.trim().length < 3) {
+        puntoErrors.nombre_punto = 'El nombre del centro de acopio es obligatorio';
       }
       if (punto.direccion_exacta.trim().length < 5) {
         puntoErrors.direccion_exacta = 'La dirección es muy corta';
@@ -79,9 +82,15 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
       if (punto.sector === 'Otro' && puntoSectorOtro.trim().length < 3) {
         puntoErrors.sector = 'Especifica el sector';
       }
+      if (punto.lat == null || punto.lng == null) {
+        puntoErrors.ubicacion = 'Selecciona la ubicación en el mapa';
+      }
       if (Object.keys(puntoErrors).length > 0) nextErrors.punto = puntoErrors;
 
       const necesidadErrors: Record<string, string> = {};
+      if (esPersona && necesidad.nombre_persona.trim().length < 3) {
+        necesidadErrors.nombre_persona = 'Tu nombre es obligatorio';
+      }
       if (necesidad.descripcion.trim().length < 10) {
         necesidadErrors.descripcion = 'Describe la necesidad con al menos 10 caracteres';
       }
@@ -103,6 +112,12 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
       if (voluntariado.sector_actual === 'Otro' && voluntariadoSectorOtro.trim().length < 3) {
         voluntariadoErrors.sector_actual = 'Especifica el sector';
       }
+      if (voluntariado.direccion_exacta.trim().length < 5) {
+        voluntariadoErrors.direccion_exacta = 'La dirección es muy corta';
+      }
+      if (voluntariado.lat == null || voluntariado.lng == null) {
+        voluntariadoErrors.ubicacion = 'Selecciona la ubicación en el mapa';
+      }
       const horas = Number(voluntariado.horas_vigencia);
       if (!horas || horas < 1 || horas > 72) {
         voluntariadoErrors.horas_vigencia = 'La vigencia debe estar entre 1 y 72 horas';
@@ -119,11 +134,14 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
     sector: SECTORES[1],
     direccion_exacta: '',
     contacto: '',
+    lat: null as number | null,
+    lng: null as number | null,
   });
   const [puntoSectorOtro, setPuntoSectorOtro] = useState('');
 
   const [necesidad, setNecesidad] = useState({
     categoria: CATEGORIAS[1],
+    nombre_persona: '',
     descripcion: '',
     urgencia: 'Moderada' as 'Crítica' | 'Moderada',
     dirigido_a: 'Ambos' as 'Personas' | 'Centros de Acopio' | 'Ambos',
@@ -133,10 +151,13 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
     nombre_voluntario: '',
     contacto: '',
     sector_actual: SECTORES[1],
+    direccion_exacta: '',
     categoria: CATEGORIAS[1],
     recurso_ofrecido: '',
     horas_vigencia: 12 as number | '',
     dirigido_a: 'Ambos' as 'Personas' | 'Centros de Acopio' | 'Ambos',
+    lat: null as number | null,
+    lng: null as number | null,
   });
   const [voluntariadoSectorOtro, setVoluntariadoSectorOtro] = useState('');
 
@@ -146,10 +167,13 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
       sector: SECTORES[1],
       direccion_exacta: '',
       contacto: '',
+      lat: null,
+      lng: null,
     });
     setPuntoSectorOtro('');
     setNecesidad({
       categoria: CATEGORIAS[1],
+      nombre_persona: '',
       descripcion: '',
       urgencia: 'Moderada',
       dirigido_a: 'Ambos',
@@ -158,10 +182,13 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
       nombre_voluntario: '',
       contacto: '',
       sector_actual: SECTORES[1],
+      direccion_exacta: '',
       categoria: CATEGORIAS[1],
       recurso_ofrecido: '',
       horas_vigencia: 12,
       dirigido_a: 'Ambos',
+      lat: null,
+      lng: null,
     });
     setVoluntariadoSectorOtro('');
     setError('');
@@ -188,10 +215,12 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
           ...punto,
           sector: puntoSector,
           contacto: normalizePhone(punto.contacto),
+          tipo_punto: necesidad.dirigido_a === 'Personas' ? 'Persona' : 'Centro de Acopio',
         });
 
         await supabaseService.createNecesidad({
           punto_id: puntoCreado.id,
+          nombre_persona: necesidad.nombre_persona || null,
           categoria: necesidad.categoria,
           descripcion: necesidad.descripcion,
           urgencia: necesidad.urgencia,
@@ -207,10 +236,13 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
           nombre_voluntario: voluntariado.nombre_voluntario,
           contacto: normalizePhone(voluntariado.contacto),
           sector_actual: voluntariadoSector,
+          direccion_exacta: voluntariado.direccion_exacta,
           categoria: voluntariado.categoria,
           recurso_ofrecido: voluntariado.recurso_ofrecido,
           activo_hasta: activoHasta.toISOString(),
           dirigido_a: voluntariado.dirigido_a,
+          lat: voluntariado.lat,
+          lng: voluntariado.lng,
         });
       }
 
@@ -281,26 +313,47 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
               <>
                 <div className="bg-red-50 p-4 rounded-lg space-y-4">
                   <div className="font-medium text-red-800">Punto de asistencia</div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Nombre del punto</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ej: Refugio Los Corales"
-                      value={punto.nombre_punto}
-                      onChange={(e) => {
-                        setPunto({ ...punto, nombre_punto: e.target.value });
-                        setFieldError('punto', 'nombre_punto', null);
-                      }}
-                      className="w-full p-3 border border-gray-300 rounded-lg"
-                    />
-                    {errors.punto?.nombre_punto && (
-                      <p className="mt-1 text-xs text-red-600">{errors.punto.nombre_punto}</p>
-                    )}
-                  </div>
+                  {(necesidad.dirigido_a === 'Centros de Acopio' || necesidad.dirigido_a === 'Ambos') && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Nombre del centro de acopio
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Refugio Los Corales"
+                        value={punto.nombre_punto}
+                        onChange={(e) => {
+                          setPunto({ ...punto, nombre_punto: e.target.value });
+                          setFieldError('punto', 'nombre_punto', null);
+                        }}
+                        className="w-full p-3 border border-gray-300 rounded-lg"
+                      />
+                      {errors.punto?.nombre_punto && (
+                        <p className="mt-1 text-xs text-red-600">{errors.punto.nombre_punto}</p>
+                      )}
+                    </div>
+                  )}
+                  {(necesidad.dirigido_a === 'Personas' || necesidad.dirigido_a === 'Ambos') && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Tu nombre</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: María Pérez"
+                        value={necesidad.nombre_persona}
+                        onChange={(e) => {
+                          setNecesidad({ ...necesidad, nombre_persona: e.target.value });
+                          setFieldError('necesidad', 'nombre_persona', null);
+                        }}
+                        className="w-full p-3 border border-gray-300 rounded-lg"
+                      />
+                      {errors.necesidad?.nombre_persona && (
+                        <p className="mt-1 text-xs text-red-600">{errors.necesidad.nombre_persona}</p>
+                      )}
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Sector</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Sector donde se ubica</label>
                       <select
                         value={punto.sector}
                         onChange={(e) => setPunto({ ...punto, sector: e.target.value })}
@@ -333,7 +386,6 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                       <input
                         type="tel"
                         inputMode="tel"
-                        required
                         placeholder="0412-1234567"
                         value={formatPhone(punto.contacto)}
                         onChange={(e) => {
@@ -352,7 +404,6 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                     <label className="block text-xs font-medium text-gray-700 mb-1">Dirección exacta</label>
                     <input
                       type="text"
-                      required
                       placeholder="Calle, avenida, punto de referencia..."
                       value={punto.direccion_exacta}
                       onChange={(e) => {
@@ -365,6 +416,19 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                       <p className="mt-1 text-xs text-red-600">{errors.punto.direccion_exacta}</p>
                     )}
                   </div>
+                  <LocationPicker
+                    label="Ubicación en el mapa"
+                    lat={punto.lat}
+                    lng={punto.lng}
+                    onChange={(lat, lng) => {
+                      setPunto({ ...punto, lat, lng });
+                      setFieldError('punto', 'ubicacion', null);
+                    }}
+                    onAddressChange={(direccion) => setPunto({ ...punto, direccion_exacta: direccion })}
+                  />
+                  {errors.punto?.ubicacion && (
+                    <p className="text-xs text-red-600">{errors.punto.ubicacion}</p>
+                  )}
                 </div>
 
                 <div className="bg-white border border-gray-200 p-4 rounded-lg space-y-4">
@@ -398,7 +462,7 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Dirigido a</label>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Soy un(a)</label>
                       <select
                         value={necesidad.dirigido_a}
                         onChange={(e) =>
@@ -411,7 +475,11 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                       >
                         {DESTINATARIOS.filter((d) => d !== 'Todos').map((dest) => (
                           <option key={dest} value={dest}>
-                            {dest === 'Ambos' ? 'Personas y Centros' : dest}
+                            {dest === 'Personas'
+                              ? 'Persona'
+                              : dest === 'Centros de Acopio'
+                              ? 'Centro de Acopio'
+                              : dest}
                           </option>
                         ))}
                       </select>
@@ -420,7 +488,6 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Descripción</label>
                     <textarea
-                      required
                       rows={3}
                       placeholder="Describe qué se necesita y en qué cantidad..."
                       value={necesidad.descripcion}
@@ -443,7 +510,6 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                     <label className="block text-xs font-medium text-gray-700 mb-1">Tu nombre</label>
                     <input
                       type="text"
-                      required
                       maxLength={60}
                       placeholder="Ej: Carlos Mendoza"
                       value={voluntariado.nombre_voluntario}
@@ -462,7 +528,6 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                     <input
                       type="tel"
                       inputMode="tel"
-                      required
                       placeholder="0412-1234567"
                       value={formatPhone(voluntariado.contacto)}
                       onChange={(e) => {
@@ -523,6 +588,34 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                   </div>
                 </div>
                 <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Dirección exacta</label>
+                  <input
+                    type="text"
+                    placeholder="Calle, avenida, punto de referencia..."
+                    value={voluntariado.direccion_exacta}
+                    onChange={(e) => {
+                      setVoluntariado({ ...voluntariado, direccion_exacta: e.target.value });
+                    }}
+                    className="w-full p-3 border border-gray-300 rounded-lg"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Puedes escribirla a mano o seleccionar un punto en el mapa para rellenarla automáticamente.
+                  </p>
+                </div>
+                <LocationPicker
+                  label="Ubicación en el mapa"
+                  lat={voluntariado.lat}
+                  lng={voluntariado.lng}
+                  onChange={(lat, lng) => {
+                    setVoluntariado({ ...voluntariado, lat, lng });
+                    setFieldError('voluntariado', 'ubicacion', null);
+                  }}
+                  onAddressChange={(direccion) => setVoluntariado({ ...voluntariado, direccion_exacta: direccion })}
+                />
+                {errors.voluntariado?.ubicacion && (
+                  <p className="text-xs text-red-600">{errors.voluntariado.ubicacion}</p>
+                )}
+                <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Dirigido a</label>
                   <select
                     value={voluntariado.dirigido_a}
@@ -536,7 +629,7 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                   >
                     {DESTINATARIOS.filter((d) => d !== 'Todos').map((dest) => (
                       <option key={dest} value={dest}>
-                        {dest === 'Ambos' ? 'Personas y Centros de Acopio' : dest}
+                        {dest}
                       </option>
                     ))}
                   </select>
@@ -544,7 +637,6 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">¿Qué puedes ofrecer?</label>
                   <textarea
-                    required
                     rows={3}
                     placeholder="Ej: Tengo moto y puedo trasladar insumos médicos"
                     value={voluntariado.recurso_ofrecido}
@@ -559,7 +651,7 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Vigencia (horas)</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Vigencia (horas disponible)</label>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -577,7 +669,6 @@ export function CreateResourceView({ onSuccess, onCancel }: CreateResourceViewPr
                     <input
                       type="text"
                       inputMode="numeric"
-                      required
                       value={voluntariado.horas_vigencia}
                       onChange={(e) => {
                         const raw = e.target.value.replace(/\D/g, '');

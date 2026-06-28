@@ -41,9 +41,7 @@ export function Footer() {
             </div>
             <p className="text-sm text-gray-600 leading-relaxed">
               Plataforma ciudadana y sin fines de lucro para conectar necesidades urgentes con
-              voluntarios y recursos en Venezuela. La información es aportada por la comunidad y
-              no está verificada por un equipo central: verifica siempre antes de actuar o
-              compartir.
+              voluntarios y recursos en Venezuela.
             </p>
             <p className="text-sm text-gray-600 leading-relaxed">
               Ante una emergencia médica o de seguridad, llama primero a los organismos de
